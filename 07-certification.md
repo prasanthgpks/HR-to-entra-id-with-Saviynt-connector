@@ -1,32 +1,24 @@
 ---
-title: "Lab 07 — Access certification"
+title: "Lab 07 — Certification"
 series: "HR to Entra ID"
 order: 7
 difficulty: "Beginner"
-estimated_time: "optional encore"
-tags: [demo, certification, saviynt, entra-id]
+estimated_time: "optional"
+tags: [demo, certification, saviynt]
 ---
 
-# Lab 07 — Access certification
+# Lab 07 — Certification
 
-Joiner / mover / leaver are automated birthright. Certification is a **human** saying the extra (or leftover) access is still justified. Encore only — the core demo is Labs 04–06.
+Optional encore. A manager keeps or revokes access Saviynt already granted.
 
-**⏱ optional · ☁ Saviynt campaign against Entra groups**
+**⏱ optional · ☁ Saviynt campaign**
 
----
+Show Alice’s Entra groups. Revoke one. It disappears in Entra after the job.
 
-## What this demonstrates
+Line: “Birthright put her in Sales. A manager can take it off.”
 
-Saviynt can show a manager **what** Alice has in Entra (groups) and record **keep or revoke**. Revoke writes back through the same **connected** connector. That is governance on top of provisioning, not a spreadsheet emailed at quarter-end.
-
-## What the audience should see
-
-1. A campaign (or a single user access view) listing Alice’s Entra groups.
-2. One revoke — group disappears in Entra after the job.
-3. Line: “Birthright put her in Sales. A manager can take it off. Entra is still not the place they decide.”
-
-Skip if the 14-day tenant has no campaign UI ready. Do not build a certification programme on stage.
+Skip if the campaign UI is not ready. Do not build a programme on stage.
 
 ## Operator
 
-Use a small campaign: one reviewer, one user, Entra groups on `ContosoEntra`. IdentCentrix entitlements are the wrong audience.
+Small campaign: one reviewer, one user, Entra groups on `ContosoEntra`.

@@ -1,104 +1,64 @@
 ---
-title: "Demo — What this shows"
+title: "What this shows"
 series: "HR to Entra ID"
 order: 0
 difficulty: "Beginner"
-estimated_time: "10 min read"
-tags: [demo, saviynt, entra-id, joiner-mover-leaver, connected-application]
+estimated_time: "5 min read"
+tags: [demo, saviynt, entra-id, joiner-mover-leaver]
 ---
 
-# Demo — What this shows
+# What this shows
 
-A hire in **Contoso People** (a hosted HR app) becomes a working Microsoft 365 account because **Saviynt** reads HR over HTTPS and writes **Entra ID** over Microsoft Graph. Two **connected applications**. Nobody opens Active Directory. Nobody waits for Entra Connect.
+A hire in **Contoso People** becomes a Microsoft 365 account because **Saviynt** reads HR over HTTPS and writes **Entra ID** over Microsoft Graph.
 
-This series is a **demo**, not a build log. The audience should leave able to explain three arrows. They should not leave able to recite an app-registration wizard.
-
-**⏱ ~15 min talk · ☁ Contoso People + Saviynt + Entra ID**
-
----
-
-## The three arrows
+**⏱ ~15 min · ☁ Contoso People → Saviynt → Entra ID**
 
 ```mermaid
 flowchart LR
   HR["Contoso People<br/><b>who exists</b>"]
   SAV["Saviynt<br/><b>what they should have</b>"]
-  ENTRA["Microsoft Entra ID<br/><b>where the account lives</b>"]
-  M365["Microsoft 365<br/>mailbox, Teams"]
+  ENTRA["Entra ID<br/><b>the account</b>"]
 
-  HR --> SAV --> ENTRA --> M365
+  HR --> SAV --> ENTRA
 ```
 
-| System | Allowed to decide | Not allowed to decide |
+| System | Decides | Does not decide |
 |---|---|---|
-| **Contoso People** | The human: hired, department, manager, Active / Terminated | Passwords, groups, licences |
-| **Saviynt** | Birthright, correlation, joiner / mover / leaver | Inventing people who are not in HR |
-| **Entra ID** | Holding the account and the mailbox once licensed | Who exists, or what department they are in |
+| **Contoso People** | Hired, department, Active / Terminated | Passwords, groups, licences |
+| **Saviynt** | Birthright, joiner / mover / leaver | Inventing people |
+| **Entra ID** | Holds the account | Who exists |
 
-Fix a wrong department in HR. Saviynt reconciles. Entra follows. Never the other way.
-
----
-
-## What the audience should believe after 15 minutes
-
-1. **HR is the source of truth for people.** Entra is a copy of the access decision, not of the hire.
-2. **Saviynt is the brain.** It matches `employeeId` to an Entra account and applies one birthright rule: department → group.
-3. **Entra is connected.** Saviynt calls Microsoft Graph. The account appears in the tenant in seconds, `On-premises sync enabled = No`.
-4. **Joiner / mover / leaver are the same pipeline.** A click in Contoso People is the business event. Saviynt is the last mile into Entra.
-
-What they do **not** need: VirtualBox, LDAPS, VPNs, OU trees, or how Vercel was wired.
-
----
+Fix department in HR. Saviynt reconciles. Entra follows.
 
 ## Cast
 
-Same people as the hybrid lab. Three of them are the talk.
-
-| employeeId | Person | Role in the demo |
+| employeeId | Person | Scene |
 |---|---|---|
-| `10042` | **Priya Sharma**, Finance, Active | **Joiner** — in HR, not in Entra until Saviynt creates her |
-| `10001` | **Alice Nguyen**, Sales | **Mover** — department change, groups follow |
-| `10012` | **Liam O'Connor**, Sales | **Leaver** — `Terminated`; account disabled, not deleted |
-
-The other nine prove the directory is a workforce, not a single test user.
-
----
+| `10042` | **Priya Sharma**, Finance | Joiner |
+| `10001` | **Alice Nguyen**, Sales | Mover |
+| `10012` | **Liam O'Connor**, Sales | Leaver |
 
 ## Talk track
 
-| Min | Scene | What you show | What you say |
-|---|---|---|---|
-| 0–2 | The arrows | The diagram above | Who exists / what they should have / where the account lives |
-| 2–4 | HR | Contoso People UI: Priya `10042` Active, Finance | She is a person. There is still no Microsoft 365 user |
-| 4–6 | Both connectors | Saviynt: `ContosoPeople` + `ContosoEntra` **Successful** | HR over HTTPS. Entra over Graph. Nothing on-prem |
-| 6–10 | Joiner | Priya appears in Entra, Finance group, sync = No | The hire started in HR. Saviynt created the account |
-| 10–12 | Mover | Alice’s department in the HR UI, then groups in Entra | Birthright moved. You did not edit Entra by hand |
-| 12–15 | Leaver | Liam **Terminated** in HR, **disabled** in Entra | HR keeps history. The account is not deleted |
-
-Certification (Lab 07) is an encore if the room cares about campaigns.
-
----
-
-## Scenes in these notes
-
-| # | Scene | What it demonstrates |
+| Min | Show | Say |
 |---|---|---|
-| 01 | The Entra tenant | The directory on screen is cloud-only Microsoft 365 |
-| 02 | Contoso People | People live in a hosted HR app; the joiner is already there |
-| 03 | Cloud connectors | Saviynt can **read HR** and **write Entra** |
-| 04 | Joiner | Priya is provisioned end to end |
-| 05 | Mover | Access follows department |
-| 06 | Leaver | Termination disables; it does not erase |
-| 07 | Certification | A manager can revoke what birthright granted |
+| 0–2 | The arrows | Who exists / what they should have / where the account lives |
+| 2–4 | Contoso People: Priya Active, Finance | She is a person. No Microsoft 365 user yet |
+| 4–6 | Saviynt: both connections **Successful** | HR over HTTPS. Entra over Graph |
+| 6–10 | Priya in Entra, Finance group | The hire started in HR. Saviynt created the account |
+| 10–12 | Alice’s department in HR, then groups in Entra | Birthright moved |
+| 12–15 | Liam **Terminated** in HR, **disabled** in Entra | HR keeps history. The account is not deleted |
 
-Operator setup (tenant, Vercel/Supabase, Saviynt connections) sits at the **bottom of scenes 01–03**. Do it before the meeting. Do not narrate it.
+## Scenes
 
-The HR app lives in [`hr-app/`](hr-app/) — public URL, REST that Saviynt can reach. See [`hr-app/README.md`](hr-app/README.md).
+| # | Scene |
+|---|---|
+| 01 | Entra tenant |
+| 02 | Contoso People |
+| 03 | Connectors |
+| 04 | Joiner |
+| 05 | Mover |
+| 06 | Leaver |
+| 07 | Certification (optional) |
 
----
-
-## Not this demo
-
-The hybrid sibling (`IDAM-Labs`) shows People → Saviynt → **Active Directory** → Entra Connect. Use that when the story is on-premises accounts and a sync engine. Use **this** demo when the story is “Saviynt governs Microsoft 365 as a connected app.”
-
-Do not mix tenants. A directory Entra Connect already owns will fight Graph writes (`On-premises sync enabled = Yes`).
+Operator setup is at the bottom of scenes 01–03. HR app: [`hr-app/`](hr-app/).

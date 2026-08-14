@@ -1,73 +1,43 @@
 ---
-title: "Lab 02 — HR is the source of truth"
+title: "Lab 02 — Contoso People"
 series: "HR to Entra ID"
 order: 2
 difficulty: "Beginner"
-estimated_time: "3 min on stage"
-tags: [demo, contoso-people, hris, joiner-mover-leaver]
+estimated_time: "3 min"
+tags: [demo, contoso-people, hris]
 ---
 
-# Lab 02 — HR is the source of truth
+# Lab 02 — Contoso People
 
-Entra can store an account. It is not allowed to know that Priya was hired. That fact lives in **Contoso People** — the hosted HR web app.
+HR decides who exists. Entra is not allowed to know that Priya was hired until Saviynt says so.
 
-This scene is the UI. The demo’s plot is “we clicked in HR, Saviynt did the rest.”
+**⏱ ~3 min · ☁ [contoso-people.vercel.app](https://contoso-people.vercel.app)**
 
-**⏱ ~3 min on stage · ☁ [contoso-people.vercel.app](https://contoso-people.vercel.app)**
-
----
-
-## What this demonstrates
-
-```mermaid
-flowchart LR
-  HR["Contoso People<br/>who exists"]
-  SAV["Saviynt"]
-  ENTRA["Entra ID"]
-
-  HR -->|"HTTPS GET /api/employees"| SAV
-  SAV -->|"Graph"| ENTRA
-```
-
-HR knows **people**: employeeId, department, manager, Active / Terminated. No passwords, no licences.
-
-| Field | What it means in the demo |
+| Field | Role |
 |---|---|
-| `employeeId` | Durable key. Correlation uses this, not display name |
-| `email` | Becomes the Entra sign-in name |
+| `employeeId` | Correlation key |
+| `email` | Entra sign-in name |
 | `department` | Birthright |
-| `status` | `Active` = stay/join; `Terminated` = leaver |
-
-Two people can share a name. Two rows cannot share `10042`.
+| `status` | `Active` or `Terminated` |
 
 ## What the audience should see
 
-Open [https://contoso-people.vercel.app](https://contoso-people.vercel.app) (not localhost). Sign in. People list:
+Open [https://contoso-people.vercel.app](https://contoso-people.vercel.app). Sign in.
 
-| employeeId | Name | Department | Status | Demo |
+| employeeId | Name | Department | Status | Scene |
 |---|---|---|---|---|
-| `10042` | Priya Sharma | Finance | Active | **Joiner** — not in Entra yet |
-| `10001` | Alice Nguyen | Sales | Active | **Mover** next |
-| `10012` | Liam O'Connor | Sales | Active | **Leaver** next |
+| `10042` | Priya Sharma | Finance | Active | Joiner |
+| `10001` | Alice Nguyen | Sales | Active | Mover |
+| `10012` | Liam O'Connor | Sales | Active | Leaver |
 
 Line: “Thirteen people. Microsoft 365 has not heard of Priya. HR already has.”
 
-Click Priya. Read the hint on her page. Do not hire, move, or terminate yet.
+Click Priya. Do not hire, move, or terminate yet.
 
-Do not open Supabase, Vercel, or `/api/employees` in the browser on stage (the API key belongs in Saviynt).
+## Operator
 
----
+Live app: [`hr-app/`](hr-app/) at [https://contoso-people.vercel.app](https://contoso-people.vercel.app).
 
-## Operator: once, off stage
+Before the talk: **Email domain → Apply** so addresses match the Lab 01 suffix. Leave Priya Active, Alice in Sales, Liam Active.
 
-The app is [`hr-app/`](hr-app/), live at [https://contoso-people.vercel.app](https://contoso-people.vercel.app). Sign-in password is `HR_DEMO_PASSWORD` in local env (not in git).
-
-Before the talk: **Email domain → Apply** so addresses match the Lab 01 `onmicrosoft.com` suffix. Leave Priya Active, Alice in Sales, Liam Active.
-
-Saviynt calls:
-
-```
-GET https://contoso-people.vercel.app/api/employees
-```
-
-with `x-api-key` (or Basic, password = `HR_API_KEY`). `GET /api/health` (no key) should return `"count": 13`.
+Saviynt calls `GET https://contoso-people.vercel.app/api/employees` with `x-api-key`. `GET /api/health` should return `"count": 13`.

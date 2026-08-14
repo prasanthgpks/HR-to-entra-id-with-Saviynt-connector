@@ -1,6 +1,6 @@
 # Contoso People (HR app)
 
-Hosted HRIS for the **HR → Saviynt → Entra** demo. Production: [https://contoso-people.vercel.app](https://contoso-people.vercel.app). The UI is what you click on stage. `GET /api/employees` is what Saviynt imports.
+HRIS for this demo. Live: [https://contoso-people.vercel.app](https://contoso-people.vercel.app). The UI is what you click. `GET /api/employees` is what Saviynt imports.
 
 ## What Saviynt calls
 
