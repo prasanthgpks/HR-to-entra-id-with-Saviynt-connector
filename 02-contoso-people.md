@@ -1,102 +1,73 @@
 ---
-title: "Lab 02 — Contoso People"
+title: "Lab 02 — HR is the source of truth"
 series: "HR to Entra ID"
 order: 2
 difficulty: "Beginner"
-estimated_time: "20–30 min"
-tags: [contoso-people, hris, csv, joiner-mover-leaver]
+estimated_time: "3 min on stage"
+tags: [demo, contoso-people, hris, joiner-mover-leaver]
 ---
 
-# Lab 02 — Contoso People
+# Lab 02 — HR is the source of truth
 
-Entra ID knows about accounts. It does not know who was hired on Monday. That fact lives in the HRIS.
+Entra can store an account. It is not allowed to know that Priya was hired. That fact lives in **Contoso People** — the hosted HR web app.
 
-This lab is the same **Contoso People** roster as the hybrid series — a CSV of **people**, not accounts — retargeted at the tenant from Lab 01. There is no APP1 VM. Saviynt will import this file in Lab 04. Nothing here creates an Entra user.
+This scene is the UI. The demo’s plot is “we clicked in HR, Saviynt did the rest.”
 
-**⏱ ~20–30 min · 📶 Beginner · 🖥 host · 🔑 Result: thirteen people, emails on your tenant domain**
-
----
-
-## Prerequisites
-
-| | |
-|---|---|
-| **Prior lab** | Lab 01 — you know `<yourprefix>.onmicrosoft.com` |
-| **Files** | [`02-employees.csv`](scripts/02-employees.csv), [`02-Set-HrDomain.ps1`](scripts/02-Set-HrDomain.ps1) |
+**⏱ ~3 min on stage · ☁ [contoso-people.vercel.app](https://contoso-people.vercel.app)**
 
 ---
 
-## Why HR is a separate system
+## What this demonstrates
 
 ```mermaid
 flowchart LR
   HR["Contoso People<br/>who exists"]
-  SAV["Saviynt<br/>what they should have"]
-  ENTRA["Entra ID<br/>the account"]
+  SAV["Saviynt"]
+  ENTRA["Entra ID"]
 
-  HR -->|"employeeId, department, status"| SAV
-  SAV -->|"create / update / disable"| ENTRA
+  HR -->|"HTTPS GET /api/employees"| SAV
+  SAV -->|"Graph"| ENTRA
 ```
 
-The CSV has no passwords and no licences. It has an **employeeId**, a department, a manager, a hire date, and `Active` or `Terminated`.
+HR knows **people**: employeeId, department, manager, Active / Terminated. No passwords, no licences.
 
-Twelve people match the hybrid-lab names. Row **10042** is **Priya Sharma** — Finance, Active, not in Entra yet. She is the joiner Lab 05 will provision.
-
-The shipped file uses `@lab.onmicrosoft.com` as a dummy suffix. You replace it with the real tenant domain before anyone imports it.
-
----
-
-## Steps
-
-### 1. Stamp the tenant domain onto every email
-On the host, in this repo’s `scripts` folder:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-Set-Location <this-repo>\scripts
-.\02-Set-HrDomain.ps1 -TenantDomain "yourprefix.onmicrosoft.com"
-```
-
-Use the domain from Lab 01, no `https://`, no trailing slash. The script rewrites only the part after `@`. Alice becomes `anguyen@yourprefix.onmicrosoft.com`. Safe to re-run.
-
-Open the CSV in Notepad. Confirm twelve Active rows plus Priya (`10042`). Close Notepad before any later import.
-
-### 2. Know the columns
-Saviynt will treat these as identity attributes, then map them onto Entra.
-
-| Column | Meaning | Later |
-|---|---|---|
-| `employeeId` | Durable HR key | Correlation; Entra `employeeId` |
-| `email` | Becomes the Entra UPN | Must match Lab 01 domain |
-| `department` | Birthright input | Entra group `G-Finance` etc. |
-| `status` | `Active` / `Terminated` | Enable vs disable |
-| `managerEmployeeId` | Manager in HR | Entra manager, once both exist |
-
-Do **not** correlate on display name. Two Liam O'Connors can exist. Two `10012` values cannot.
-
-### 3. Joiner, mover, leaver are CSV edits
-Do not save a mover or leaver today. Lab 04 imports the twelve plus Priya as they are.
-
-| Event | What you change |
+| Field | What it means in the demo |
 |---|---|
-| **Joiner** | Priya is already there. A real extra hire is a new `employeeId` and `Active` |
-| **Mover** | Change `department` (Lab 06) |
-| **Leaver** | Set `status` to `Terminated` — do not delete the row (Lab 07) |
+| `employeeId` | Durable key. Correlation uses this, not display name |
+| `email` | Becomes the Entra sign-in name |
+| `department` | Birthright |
+| `status` | `Active` = stay/join; `Terminated` = leaver |
 
-### 4. Optional: inspect as JSON
-[`02-Start-HrApi.ps1`](scripts/02-Start-HrApi.ps1) serves the CSV on `http://127.0.0.1:8080` so you can `GET /employees`. Saviynt in the cloud **cannot** reach that URL. It is for you, not for the connector.
+Two people can share a name. Two rows cannot share `10042`.
 
-```powershell
-.\02-Start-HrApi.ps1
-Invoke-RestMethod http://127.0.0.1:8080/employees/10042
-```
+## What the audience should see
 
-`Ctrl+C` stops it. No firewall rule, no elevation, if you keep the `127.0.0.1` prefix.
+Open [https://contoso-people.vercel.app](https://contoso-people.vercel.app) (not localhost). Sign in. People list:
+
+| employeeId | Name | Department | Status | Demo |
+|---|---|---|---|---|
+| `10042` | Priya Sharma | Finance | Active | **Joiner** — not in Entra yet |
+| `10001` | Alice Nguyen | Sales | Active | **Mover** next |
+| `10012` | Liam O'Connor | Sales | Active | **Leaver** next |
+
+Line: “Thirteen people. Microsoft 365 has not heard of Priya. HR already has.”
+
+Click Priya. Read the hint on her page. Do not hire, move, or terminate yet.
+
+Do not open Supabase, Vercel, or `/api/employees` in the browser on stage (the API key belongs in Saviynt).
 
 ---
 
-## What you have now
+## Operator: once, off stage
 
-A source of truth that is not Entra ID: people, identified by `employeeId`, with UPNs that will be valid in your tenant. Lab 03 registers an application so Saviynt can write those people into Entra as a connected application.
+The app is [`hr-app/`](hr-app/), live at [https://contoso-people.vercel.app](https://contoso-people.vercel.app). Sign-in password is `HR_DEMO_PASSWORD` in local env (not in git).
 
-Do **not** start the Saviynt 14-day instance until you are ready to sit through Labs 03–08.
+Before the talk: **Email domain → Apply** so addresses match the Lab 01 `onmicrosoft.com` suffix. Leave Priya Active, Alice in Sales, Liam Active.
+
+Saviynt calls:
+
+```
+GET https://contoso-people.vercel.app/api/employees
+```
+
+with `x-api-key` (or Basic, password = `HR_API_KEY`). `GET /api/health` (no key) should return `"count": 13`.

@@ -1,126 +1,60 @@
 ---
-title: "Lab 01 — The Microsoft 365 E5 Tenant"
+title: "Lab 01 — The directory the demo uses"
 series: "HR to Entra ID"
 order: 1
 difficulty: "Beginner"
-estimated_time: "45–60 min"
-tags: [entra-id, microsoft-365, tenant, cloud-identity, licensing]
+estimated_time: "5 min on stage"
+tags: [demo, entra-id, microsoft-365]
 ---
 
-# Lab 01 — The Microsoft 365 E5 Tenant
+# Lab 01 — The directory the demo uses
 
-This series never builds a domain controller. The directory **is** Microsoft Entra ID. This lab creates a tenant of your own, records the values Saviynt will need, and leaves you with one cloud-only test user so you can see what “born in the cloud” looks like before Saviynt starts writing.
+This scene proves the accounts live in **Microsoft Entra ID**, not in Active Directory. Everything Saviynt creates here is **cloud-only**. A licence, not a sync engine, turns on the mailbox.
 
-**⏱ ~45–60 min · 📶 Beginner · 🖥 host browser · ☁ Creates: a new Entra tenant**
-
----
-
-## Prerequisites
-
-| | |
-|---|---|
-| **Where** | Your laptop browser. No VMs |
-| **Account** | A personal email that can receive a verification code |
-| **Payment method** | Microsoft may ask for a card. It is not charged during the trial if you cancel in time |
-
-> **Warning:** Use a tenant you personally own. Do **not** use an employer tenant. Do **not** reuse the hybrid-lab tenant that Entra Connect is already syncing.
+**⏱ ~5 min on stage · ☁ Entra admin center**
 
 ---
 
-## Understanding what you are about to create
-
-A **tenant** is your isolated Entra ID directory — users, groups, applications.
-
-A **subscription** inside it holds licences (Microsoft 365 E5). The tenant survives when the trial ends.
-
-A **domain** is the name. Every tenant gets `<prefix>.onmicrosoft.com`. That prefix **cannot be changed**. Pick a lab name that is not the hybrid one: `contosoiga2026` rather than `GpkLabs`.
+## What this demonstrates
 
 ```mermaid
-flowchart TB
-  TENANT["Your tenant<br/>Microsoft Entra ID"]
-  DOM["yourprefix.onmicrosoft.com"]
-  SUB["Microsoft 365 E5<br/>25 licences, 30 days"]
-  USERS["Users and groups"]
-  APPS["App registrations<br/>Lab 03: Saviynt"]
+flowchart LR
+  ENTRA["Entra ID<br/>the account"]
+  M365["Microsoft 365<br/>mailbox"]
 
-  TENANT --- DOM
-  TENANT --- SUB
-  TENANT --- USERS
-  TENANT --- APPS
-  SUB -->|"licences assigned to"| USERS
+  ENTRA -->|"licence"| M365
 ```
 
-Creating a user does not give them a mailbox. Assigning a licence does.
+- There is no OU tree. Birthright is **groups**.
+- `On-premises sync enabled = No` means this tenant is not being fed by Entra Connect.
+- Creating a user does not create a mailbox. Assigning E5 does.
+
+## What the audience should see
+
+[entra.microsoft.com](https://entra.microsoft.com) (or [admin.microsoft.com](https://admin.microsoft.com) if Entra refuses the browser).
+
+| Open | Point at | Line |
+|---|---|---|
+| **Overview** | Primary domain `yourprefix.onmicrosoft.com` | “This is Contoso’s cloud directory for the demo.” |
+| **Users** | Admin + `Cloud Only Test` only, **before** the joiner | “Priya is not here yet. She exists only in HR.” |
+| **Cloud Only Test** | **On-premises sync enabled = No**, fields editable | “After Saviynt runs, Priya will look like this — born in the cloud.” |
+| **Groups** | Empty, or only demo groups you created | “No Sales/Finance folders. Groups carry access.” |
+
+Do not open Billing, App registrations, or Graph PowerShell on stage.
+
+## What you do not say
+
+How you signed up for the E5 trial, which card you used, or why the prefix cannot be renamed. That is operator work below.
 
 ---
 
-## Steps
+## Operator: once, off stage
 
-### 1. Start the Microsoft 365 E5 trial
-Open the [Microsoft 365 E5 trial page](https://www.microsoft.com/en-us/microsoft-365/enterprise/e5) and start the free trial.
+Use a tenant **you** own. Never an employer directory. Never the hybrid-lab tenant Entra Connect already syncs (`GpkLabs.onmicrosoft.com` or equivalent) — those users are `On-premises sync = Yes` and Graph will fight Connect.
 
-**Organisation / domain prefix.** This becomes `<yourprefix>.onmicrosoft.com` forever. Do not recycle the hybrid prefix.
+1. Start a [Microsoft 365 E5 trial](https://www.microsoft.com/en-us/microsoft-365/enterprise/e5). Choose a **new** `onmicrosoft.com` prefix. The first account is Global Administrator — MFA on, keep it.
+2. Record **tenant domain**, **tenant ID** (GUID), and the admin UPN.
+3. Create `cloudonly@<prefix>.onmicrosoft.com`, display name `Cloud Only Test`. Confirm sync = **No**.
+4. Confirm E5 seats exist. You need one spare for Priya if you show a mailbox.
 
-**First account.** That user is Global Administrator. Record the UPN and password. There is no DC to reset it from.
-
-> **Tip:** Calendar reminder at day 25. Cancel the paid conversion if you used a card. The directory stays.
-
-### 2. Sign in to the Entra admin center
-[entra.microsoft.com](https://entra.microsoft.com) with the Global Administrator. Complete MFA. Security defaults on a new tenant expect it. Keep it.
-
-If that URL shows **Unsupported browser**, use [admin.microsoft.com](https://admin.microsoft.com) or [portal.azure.com](https://portal.azure.com) in current **Microsoft Edge**.
-
-### 3. Record the values later labs need
-
-| Value | Where | Used in |
-|---|---|---|
-| **Tenant domain** | Entra **Overview** — primary `onmicrosoft.com` | Lab 02 (HR emails), Lab 05 (UPN) |
-| **Tenant ID** | Same Overview — GUID | Lab 03 app registration / Saviynt |
-| **Global Administrator** | The account you signed in with | Admin consent in Lab 03 |
-
-### 4. Tour the four blades that matter here
-
-This directory is **flat**. There are no OUs. Birthright later is **groups**, not folders.
-
-- **Users** — only the admin so far
-- **Groups** — empty; Finance / Sales / … land here in Labs 04–05
-- **Roles and administrators** — privileged roles
-- **Enterprise applications** / **App registrations** — Lab 03 registers Saviynt here
-
-### 5. Create a cloud-only test user
-**Users → New user → Create new user**. Example: `cloudonly@<yourprefix>.onmicrosoft.com`, display name `Cloud Only Test`.
-
-Open the user. Every field is editable. **On-premises sync enabled** is **No**. Every account Saviynt creates should look like this, not like a Connect-synced object.
-
-Keep this user. After Lab 05, open it next to Priya.
-
-### 6. Check licences
-**Billing → Licenses** (or Microsoft 365 admin center). Microsoft 365 E5, 25 seats, one on the admin.
-
-| Feature | Requires | This series |
-|---|---|---|
-| Graph create / disable users | Directory (free) | Labs 03–07 |
-| Group-based licensing | Entra ID P1 | Optional in Lab 05 |
-| Access reviews | Entra ID P2 | Lab 08 comparison |
-
-E5 includes P2 while the trial lasts.
-
-### 7. Verify
-You can sign in to Entra Overview and see the new `onmicrosoft.com` domain and at least two users.
-
-From the **host** (optional):
-
-```powershell
-Install-Module Microsoft.Graph -Scope CurrentUser
-Connect-MgGraph -Scopes "User.Read.All", "Domain.Read.All"
-Get-MgDomain | Select-Object Id, IsVerified, IsDefault
-Get-MgUser | Select-Object DisplayName, UserPrincipalName
-```
-
-`IsVerified: True` on your `onmicrosoft.com` domain is the result that matters. Lab 02 stamps that domain onto every Contoso People email.
-
----
-
-## What you have now
-
-A tenant that is not attached to Active Directory, a Global Administrator with MFA, one cloud-only user, and E5 seats. Lab 02 makes the HR file use this domain.
+Cancel the paid conversion before day 30. The tenant remains; the demo still works without P2 extras.

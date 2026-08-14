@@ -1,148 +1,104 @@
 ---
-title: "Plan — Contoso People → Saviynt → Entra ID"
+title: "Demo — What this shows"
 series: "HR to Entra ID"
 order: 0
 difficulty: "Beginner"
-estimated_time: "15 min read"
-tags: [planning, architecture, entra-id, saviynt, microsoft-graph, joiner-mover-leaver]
+estimated_time: "10 min read"
+tags: [demo, saviynt, entra-id, joiner-mover-leaver, connected-application]
 ---
 
-# Plan — Contoso People → Saviynt → Entra ID
+# Demo — What this shows
 
-This series builds the **cloud-only** identity path: hiring someone in **Contoso People** creates a Microsoft Entra ID account (and a Microsoft 365 mailbox once licensed) because **Saviynt’s Entra connector** writes to Microsoft Graph.
+A hire in **Contoso People** (a hosted HR app) becomes a working Microsoft 365 account because **Saviynt** reads HR over HTTPS and writes **Entra ID** over Microsoft Graph. Two **connected applications**. Nobody opens Active Directory. Nobody waits for Entra Connect.
 
-There is no domain controller. There is no Entra Connect. Saviynt is not blocked by a host-only network. The connector is a **connected application**: Saviynt calls Microsoft, Microsoft answers.
+This series is a **demo**, not a build log. The audience should leave able to explain three arrows. They should not leave able to recite an app-registration wizard.
 
-The hybrid sibling (`IDAM-Labs`) is People → Saviynt → **Active Directory** → Entra. Same humans. Do not mix the two tenants.
-
-**⏱ ~15 min read · 📶 Beginner · ☁ Microsoft 365 E5 + Saviynt · 🖥 your laptop browser only**
+**⏱ ~15 min talk · ☁ Contoso People + Saviynt + Entra ID**
 
 ---
 
-## What we are actually building
-
-Three systems, each with one job.
+## The three arrows
 
 ```mermaid
 flowchart LR
   HR["Contoso People<br/><b>who exists</b>"]
   SAV["Saviynt<br/><b>what they should have</b>"]
   ENTRA["Microsoft Entra ID<br/><b>where the account lives</b>"]
-  M365["Microsoft 365<br/>email, Teams, files"]
+  M365["Microsoft 365<br/>mailbox, Teams"]
 
   HR --> SAV --> ENTRA --> M365
 ```
 
-**Contoso People** is the HRIS — a CSV of people (employeeId, department, manager, Active / Terminated). Same roster as the hybrid lab. It does not create Entra users.
-
-**Saviynt** imports those people as identities, evaluates birthright, and **provisions Entra** through the Microsoft Entra ID / Azure AD connector.
-
-**Microsoft Entra ID** is the directory. Accounts here are **cloud-only**. `On-premises sync enabled` stays **No**. A licence turns on the mailbox.
-
-> **Note:** Arrows still only go one way. You do not fix a wrong department in Entra. You change Contoso People, Saviynt reconciles, Entra follows.
-
----
-
-## Connected vs the hybrid lab
-
-| | Hybrid series (`IDAM-Labs`) | This series |
+| System | Allowed to decide | Not allowed to decide |
 |---|---|---|
-| Account is born in | Active Directory | Entra ID, via Saviynt |
-| Saviynt target | LDAPS into a DC (Finish B: tasks in ADUC) | Graph API (connected) |
-| Path to the directory | VPN or disconnected | HTTPS to `graph.microsoft.com` |
-| Entra Connect | Required | **Do not install** |
-| VMs | DC, APP1, Client1 | None |
+| **Contoso People** | The human: hired, department, manager, Active / Terminated | Passwords, groups, licences |
+| **Saviynt** | Birthright, correlation, joiner / mover / leaver | Inventing people who are not in HR |
+| **Entra ID** | Holding the account and the mailbox once licensed | Who exists, or what department they are in |
 
-“Connected application” means Saviynt can **import and write** without a human carrying a task. That works here because Entra is already on the internet, behind OAuth — not because we opened port 636.
-
-HR import is still a **file** in a University L200 tenant (Saviynt cannot GET `http://127.0.0.1:8080`). The **Entra** side is live. That is enough to teach joiner / mover / leaver against a real tenant.
+Fix a wrong department in HR. Saviynt reconciles. Entra follows. Never the other way.
 
 ---
 
-## What happens when someone is hired
+## What the audience should believe after 15 minutes
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant HR as Contoso People
-    participant SAV as Saviynt
-    participant G as Microsoft Graph
-    participant AAD as Entra ID
+1. **HR is the source of truth for people.** Entra is a copy of the access decision, not of the hire.
+2. **Saviynt is the brain.** It matches `employeeId` to an Entra account and applies one birthright rule: department → group.
+3. **Entra is connected.** Saviynt calls Microsoft Graph. The account appears in the tenant in seconds, `On-premises sync enabled = No`.
+4. **Joiner / mover / leaver are the same pipeline.** A click in Contoso People is the business event. Saviynt is the last mile into Entra.
 
-    HR->>SAV: New hire — employeeId 10042, Finance, Active
-    SAV->>SAV: No matching identity — joiner
-    SAV->>SAV: Birthright: Finance group + UPN from HR email
-    SAV->>G: Create user (client credentials)
-    G->>AAD: Cloud account psharma@yourtenant.onmicrosoft.com
-    AAD-->>SAV: objectId returned
-    Note over AAD: Licence is a separate assignment
-```
-
-No 30-minute Connect cycle. Graph create is seconds. Mailbox still waits on **licence** assignment (group-based or by hand).
+What they do **not** need: VirtualBox, LDAPS, VPNs, OU trees, or how Vercel was wired.
 
 ---
 
-## The labs
+## Cast
 
-Eight labs. No hypervisor.
+Same people as the hybrid lab. Three of them are the talk.
 
-### Phase 1 — The cloud directory
-
-| # | Lab | Outcome |
+| employeeId | Person | Role in the demo |
 |---|---|---|
-| 01 | The Microsoft 365 E5 tenant | A **new** tenant you own. Not the hybrid one |
+| `10042` | **Priya Sharma**, Finance, Active | **Joiner** — in HR, not in Entra until Saviynt creates her |
+| `10001` | **Alice Nguyen**, Sales | **Mover** — department change, groups follow |
+| `10012` | **Liam O'Connor**, Sales | **Leaver** — `Terminated`; account disabled, not deleted |
 
-### Phase 2 — Source of truth
+The other nine prove the directory is a workforce, not a single test user.
 
-| # | Lab | Outcome |
+---
+
+## Talk track
+
+| Min | Scene | What you show | What you say |
+|---|---|---|---|
+| 0–2 | The arrows | The diagram above | Who exists / what they should have / where the account lives |
+| 2–4 | HR | Contoso People UI: Priya `10042` Active, Finance | She is a person. There is still no Microsoft 365 user |
+| 4–6 | Both connectors | Saviynt: `ContosoPeople` + `ContosoEntra` **Successful** | HR over HTTPS. Entra over Graph. Nothing on-prem |
+| 6–10 | Joiner | Priya appears in Entra, Finance group, sync = No | The hire started in HR. Saviynt created the account |
+| 10–12 | Mover | Alice’s department in the HR UI, then groups in Entra | Birthright moved. You did not edit Entra by hand |
+| 12–15 | Leaver | Liam **Terminated** in HR, **disabled** in Entra | HR keeps history. The account is not deleted |
+
+Certification (Lab 07) is an encore if the room cares about campaigns.
+
+---
+
+## Scenes in these notes
+
+| # | Scene | What it demonstrates |
 |---|---|---|
-| 02 | Contoso People | CSV of thirteen people; emails match the new tenant domain |
+| 01 | The Entra tenant | The directory on screen is cloud-only Microsoft 365 |
+| 02 | Contoso People | People live in a hosted HR app; the joiner is already there |
+| 03 | Cloud connectors | Saviynt can **read HR** and **write Entra** |
+| 04 | Joiner | Priya is provisioned end to end |
+| 05 | Mover | Access follows department |
+| 06 | Leaver | Termination disables; it does not erase |
+| 07 | Certification | A manager can revoke what birthright granted |
 
-### Phase 3 — Connected Entra
+Operator setup (tenant, Vercel/Supabase, Saviynt connections) sits at the **bottom of scenes 01–03**. Do it before the meeting. Do not narrate it.
 
-| # | Lab | Outcome |
-|---|---|---|
-| 03 | Saviynt Entra connector | App registration + Graph; **Test Connection** succeeds |
-| 04 | Import HR and correlate | Identities from the CSV; Entra accounts linked by UPN / employeeId |
-| 05 | Joiner | Priya (`10042`) is created in Entra by the connector |
-| 06 | Mover | Department change updates groups in Entra |
-| 07 | Leaver | Termination disables (does not delete) the Entra account |
-| 08 | Access certification | A campaign against Entra group membership |
-
-> **Tip:** Labs 01–02 need no Saviynt. Do not start the 14-day lab instance until the tenant and CSV are ready.
+The HR app lives in [`hr-app/`](hr-app/) — public URL, REST that Saviynt can reach. See [`hr-app/README.md`](hr-app/README.md).
 
 ---
 
-## Tenant rule (read this twice)
+## Not this demo
 
-> **Warning:** Do **not** point this series at the hybrid lab tenant — the one Entra Connect already syncs (`GpkLabs.onmicrosoft.com` or equivalent). Synced users have `On-premises sync enabled = Yes`. Graph cannot treat them as cloud-born, and Saviynt create/update will collide with Connect. Create a **second** Microsoft 365 trial with a different `onmicrosoft.com` prefix.
+The hybrid sibling (`IDAM-Labs`) shows People → Saviynt → **Active Directory** → Entra Connect. Use that when the story is on-premises accounts and a sync engine. Use **this** demo when the story is “Saviynt governs Microsoft 365 as a connected app.”
 
-Use a tenant you personally own. Never an employer directory.
-
----
-
-## About the Saviynt trial
-
-Same clock as the hybrid series: **14-day lab instance, renewable**. University L200 comes pre-loaded with IdentCentrix demo people. Leave that demo AD connection alone. This series adds a **new** Entra connection named `ContosoEntra`.
-
-The client secret you put in Saviynt can create and disable users in **your** tenant. Treat it like a Domain Admin password. Do not screenshot it. Do not commit it.
-
----
-
-## What you need before Lab 01
-
-| Requirement | Detail |
-|---|---|
-| A laptop | Browser + PowerShell 7 or Windows PowerShell. No extra RAM for VMs |
-| A personal email | For the Microsoft 365 trial |
-| Payment method | Microsoft may ask for a card; cancel the trial before day 30 |
-| Saviynt | University / employer / NFR lab URL — activate at Lab 03 |
-| Hybrid series | Optional. Keep it. Separate tenant |
-
----
-
-## Known risks
-
-> **Warning:** The Entra app registration uses **application** permissions (`User.ReadWrite.All` and similar). Anyone with the client secret can manipulate the tenant. Lab 03 uses a lab-only secret; rotate or delete the app when the series is done.
-
-> **Note:** The E5 trial expires after 30 days. The tenant remains. Graph provisioning still works on the free directory; licensed extras (P2 access reviews, fat mailboxes) may stop.
+Do not mix tenants. A directory Entra Connect already owns will fight Graph writes (`On-premises sync enabled = Yes`).
