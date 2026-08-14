@@ -1,0 +1,16 @@
+{
+  "name": "hr-to-entra-id-with-saviynt-connector",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HR → Saviynt → Microsoft Entra ID using the Saviynt Entra connector (connected application). Local notes only — not published.",
+  "scripts": {
+    "build": "npx @11ty/eleventy",
+    "serve": "npx @11ty/eleventy --serve"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.6",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.2"
+  }
+}

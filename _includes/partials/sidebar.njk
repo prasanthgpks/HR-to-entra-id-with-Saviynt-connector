@@ -1,0 +1,14 @@
+<aside class="sidebar">
+  <a class="sidebar__brand" href="{{ '/index.html' | url }}">HR to Entra ID</a>
+  <nav class="sidebar__nav" aria-label="Labs">
+    {% for lab in collections.labs %}
+    <a
+      href="{{ lab.url | url }}"
+      class="sidebar__link{% if lab.url == page.url %} is-active{% endif %}"
+    >
+      <span class="sidebar__order">{{ lab.data.order | pad2 }}</span>
+      <span class="sidebar__title">{{ lab.data.title | labShortTitle }}</span>
+    </a>
+    {% endfor %}
+  </nav>
+</aside>

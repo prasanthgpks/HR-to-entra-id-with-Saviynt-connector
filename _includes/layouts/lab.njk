@@ -1,0 +1,35 @@
+{% extends "layouts/base.njk" %}
+{% block content %}
+{% set prevLab = collections.labs | previousLab(page.url) %}
+{% set nextLab = collections.labs | nextLab(page.url) %}
+<div class="layout">
+  {% include "partials/sidebar.njk" %}
+  <main class="content">
+    <p class="content__eyebrow"><a href="{{ '/index.html' | url }}">HR to Entra ID</a></p>
+
+    <div class="prose">
+      {{ content | safe }}
+    </div>
+
+    <nav class="pager" aria-label="Lab navigation">
+      {% if prevLab %}
+      <a class="pager__link pager__link--prev" href="{{ prevLab.url | url }}">
+        <span class="pager__label">← Previous</span>
+        <span class="pager__title">{{ prevLab.data.title }}</span>
+      </a>
+      {% else %}
+      <span class="pager__link pager__link--empty"></span>
+      {% endif %}
+
+      {% if nextLab %}
+      <a class="pager__link pager__link--next" href="{{ nextLab.url | url }}">
+        <span class="pager__label">Coming next →</span>
+        <span class="pager__title">{{ nextLab.data.title }}</span>
+      </a>
+      {% else %}
+      <span class="pager__link pager__link--empty"></span>
+      {% endif %}
+    </nav>
+  </main>
+</div>
+{% endblock %}
