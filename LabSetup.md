@@ -2,7 +2,7 @@
 
 Operator log for **HR → Saviynt → Entra**. Not a demo scene. Tick boxes as we go. Do not put client secrets, API keys, or the Graph secret **Value** in this file.
 
-Last updated: 14 Aug 2026 (`ContosoPeople` + `ContosoEntra` tests Successful)
+Last updated: 15 Aug 2026 (`UserImport_ContosoPeople` Success)
 
 ---
 
@@ -32,6 +32,7 @@ Last updated: 14 Aug 2026 (`ContosoPeople` + `ContosoEntra` tests Successful)
 - [x] Signed in to Contoso People UI
 - [x] Saviynt `ContosoPeople` REST — **Save & Test Connection** Successful
 - [x] Saviynt `ContosoEntra` Azure AD — **Save & Test Connection** Successful
+- [x] Saviynt `UserImport_ContosoPeople` (User Import via a Connection) — Success. Priya in Saviynt Users
 
 ---
 
@@ -180,25 +181,65 @@ Use the **new** Entra tenant (app registration), not any other directory.
 
 This is **people from Contoso People into Saviynt**. It is not the Entra import you already ran.
 
-- [ ] **Admin → Identity Repository → Connections → ContosoPeople**
-- [ ] Paste **ImportUserJSON** (block above). Same API key as ConnectionJSON
-- [ ] **Save**. Re-test only if you want; it can stay Successful
-- [ ] **Admin → Job Control Panel → + Add New Job**
-The **first** Job Type dropdown must be **User Import**. Do not use Application Data Import (Single or Multi Threaded). Those only offer Import Type **Accounts** or **Access** (Entra). `ACCOUNTS_ContosoEntra` already did that.
-- [ ] Name: `UserImport_ContosoPeople`
-- [ ] Connection / External connection: `ContosoPeople`. Do **not** set System to `ContosoEntra`
-- [ ] Schedule: leave a dummy (e.g. hourly). You will **Run Now** from the job list
-- [ ] **Save** → on the job row, **Actions → Run Now** (or equivalent)
-- [ ] Wait until the job is **Success** in Job Control Panel
-- [ ] **Admin → Identity Repository → Users** — find Priya (`10042` / `psharma@…`). She must exist here and still **not** in Entra
+### 1. ImportUserJSON on the connection
 
-If **User Import** is not in the first Job Type list, screenshot that dropdown (or list the names) before saving.
+- [ ] **Admin → Identity Repository → Connections → ContosoPeople**
+- [ ] **ImportUserJSON** pasted (block above). Same API key as ConnectionJSON
+- [ ] **Save**. Leave ImportAccountEntJSON empty
+
+### 2. Security system for HR (required before the user job)
+
+REST user import needs its **own** security system. Do not reuse `ContosoEntra`.
+
+**Admin → Identity Repository → Security System → Actions → Create**
+
+| Field | Value |
+|---|---|
+| System name | `ContosoPeople` |
+| Default connection | `ContosoPeople` |
+| Provisioning | off / none |
+
+Then **Endpoints → Create** (or the Endpoints tab):
+
+| Field | Value |
+|---|---|
+| Endpoint name | `ContosoPeople` |
+| Security system | `ContosoPeople` |
+| Connection | `ContosoPeople` |
+
+### 3. Job — User Import via a Connection
+
+- [ ] **Admin → Job Control Panel → + Add New Job**
+- [ ] Job Type: **User Import via a Connection (UserImportJob)** — you have this selected
+
+| Field | Value |
+|---|---|
+| Job Name | `UserImport_ContosoPeople` |
+| Import from Saviynt Connect | **No** |
+| Export Data To Saviynt Cloud | **No** |
+| External Connection | **`ContosoPeople`** — not `ContosoEntra` |
+| Allow User Operation | **Create And Update** |
+| User Not In Feed Action | **No Action** — must stay this. Anything else can disable IdentCentrix training users |
+| Zero day provisioning | **No** — otherwise Saviynt may create all 13 Entra accounts before birthright is ready |
+| Expire password for New User | **No** |
+
+- [ ] Scroll for schedule if needed; dummy hourly is fine
+- [x] **Save** → job row → play / **Run Now**
+- [x] **Admin → Identity Repository → Users** — Priya `10042` present; still absent from Entra
+
+**Do not** pick Application Data Import. That form’s Import Type is only **Accounts** or **Access**. `ACCOUNTS_ContosoEntra` already imported Entra.
+
+### If User Import is not in the Job Type list (L200)
+
+**Admin → Identity Repository → Users → Actions → Upload User**. That is the L100 CSV path. Use it only if the User Import job type is missing. Map columns: username=email, firstname, lastname, email, employeeid, departmentname, statuskey=Active. Do not upload into IdentCentrix as a replacement for Priya’s HR row — create/update the 13 Contoso People identities.
+
+If the Job Type dropdown has neither User Import nor Schema User Import, screenshot the **open list of job type names**.
 
 ---
 
 ## Next
 
-- [ ] HR User Import job Success — Priya in Saviynt Users, not in Entra
+- [x] HR User Import job Success — Priya in Saviynt Users, not in Entra
 - [ ] Birthright: department → group (`Finance`, `Sales`, `IT`, `HR`) on `ContosoEntra`
 - [ ] Lab 04 joiner — Priya
 - [ ] Lab 05 mover — Alice
