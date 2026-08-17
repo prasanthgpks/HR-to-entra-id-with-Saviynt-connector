@@ -10,7 +10,7 @@ Last updated: 15 Aug 2026 (`UserImport_ContosoPeople` Success)
 
 | Item | Value |
 |---|---|
-| Entra primary domain | `_yourprefix.onmicrosoft.com_` |
+| Entra primary domain | `mantilamlaboutlook.onmicrosoft.com` |
 | Entra tenant ID | |
 | Admin UPN | |
 | App registration name | `Saviynt Contoso Entra` |
@@ -234,6 +234,94 @@ Then **Endpoints → Create** (or the Endpoints tab):
 **Admin → Identity Repository → Users → Actions → Upload User**. That is the L100 CSV path. Use it only if the User Import job type is missing. Map columns: username=email, firstname, lastname, email, employeeid, departmentname, statuskey=Active. Do not upload into IdentCentrix as a replacement for Priya’s HR row — create/update the 13 Contoso People identities.
 
 If the Job Type dropdown has neither User Import nor Schema User Import, screenshot the **open list of job type names**.
+
+---
+
+## In progress — Birthright and joiner (Priya)
+
+HR people are in Saviynt. Entra still should not have Priya. Rules decide **Finance → Finance group** on `ContosoEntra`; a provisioning job writes Graph.
+
+### 1. Confirm Entra groups landed as entitlements
+
+**Admin → Identity Repository → Entitlements** (or Security System → `ContosoEntra` → Endpoints → entitlements).
+
+You want groups **Finance**, **Sales**, **IT**, **HR**. If they are missing, run job `ACCESS_ContosoEntra` (Application Data Import, Import Type **Access**), then refresh.
+
+### 2. Technical rules (birthright)
+
+**Admin → Policies → Technical Rules → Create** (if Policies is not in the left list: **Admin → Identity Repository** and look for **Technical Rules**).
+
+This form uses Advanced Config and **Send for Approval** (L200).
+
+**Condition** — Advanced Config **ON**. Always AND the Contoso email domain so IdentCentrix training users are excluded (they also have department Sales / IT / HR).
+
+```text
+Users.departmentname = 'Sales' AND Users.email like '%mantilamlaboutlook.onmicrosoft.com%'
+```
+
+Same pattern for Finance / IT / HR — only the department string changes. Preview must **not** end with OR or AND.
+
+If Email is not `Users.email`, pick **Email** in the builder (Advanced **OFF**) as a second condition: **Contains** `mantilamlaboutlook.onmicrosoft.com`. Next Condition on the last row blank.
+
+Preview for Sales should be Alice, Brian, Carla, Liam only — no `@identcentrix.com`.
+
+**Action**
+
+| Field | Value |
+|---|---|
+| Organization Name | leave empty |
+| Object Type | `ContosoEntra::AADGroup` |
+| Object | **pick** the Finance group from the search list — do not only type the word. Red border means it is not a selected entitlement |
+| Attribute | not **Assign**. Leave default / blank if allowed |
+| Action | **Add Access** (this column is currently empty — that is the yellow warning) |
+
+Tick **Birthright**. Leave **Detective** off. Do not click + Add Action again.
+
+**Preview** — Priya should appear. Then **Send for Approval** and approve the rule if L200 asks. Repeat for Sales, IT, HR.
+
+Create **four** enabled rules. Same pattern, different department and group.
+
+| Rule name | When | Then |
+|---|---|---|
+| `Birthright-Finance` | `departmentname` equals `Finance` | Add access: endpoint `ContosoEntra`, group **Finance** |
+| `Birthright-Sales` | `departmentname` equals `Sales` | group **Sales** |
+| `Birthright-IT` | `departmentname` equals `IT` | group **IT** |
+| `Birthright-HR` | `departmentname` equals `HR` | group **HR** |
+
+On each rule, if the form has it:
+
+- Status: **Enabled**
+- **Remove birthright if condition fails**: **Yes** (mover/leaver need this)
+- Do not assign IdentCentrix entitlements
+
+If the condition picker has no `departmentname`, use `customproperty1` (same department string from ImportUserJSON).
+
+Assigning a group to a user with **no** Entra account should also create a **New Account** task on `ContosoEntra`. Do not create Priya by hand in Entra.
+
+### 3. Evaluate rules, then provision
+
+Rules did not fire at HR import (`Zero day provisioning` was **No**). Trigger them now:
+
+- Open **Users → Priya** (`10042` / `psharma@…`) → **Actions** → evaluate / run technical rules / provision access (wording varies), **or**
+- Job Control Panel → job type that runs technical rules, if you see one
+
+Then **Pending Tasks** (often **Admin → Identity Repository → Tasks**, or **Pending Tasks** under Admin). You want tasks for Priya: **New Account** on `ContosoEntra` and **Add Access** Finance.
+
+**Job Control Panel → + Add New Job**
+
+| Field | Value |
+|---|---|
+| Job Type | **Provisioning Job (WSRETRYJOB)** |
+| Name | `Provisioning_ContosoEntra` |
+| System | `ContosoEntra` |
+
+Save → **Run Now**. Wait for Success.
+
+### 4. Prove the joiner
+
+- [ ] Entra **Users** — `psharma@<your-prefix>.onmicrosoft.com` exists
+- [ ] Entra **Groups → Finance** — Priya is a member
+- [ ] Contoso People — Priya still Active (HR did not change)
 
 ---
 
